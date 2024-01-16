@@ -4,8 +4,12 @@ package com.hankcs.textrank;
 import com.hankcs.hanlp.HanLP;
 import com.hankcs.hanlp.dictionary.stopword.CoreStopWordDictionary;
 import com.hankcs.hanlp.seg.common.Term;
+import opennlp.tools.sentdetect.SentenceDetectorME;
+import opennlp.tools.sentdetect.SentenceModel;
 
+import java.io.InputStream;
 import java.util.*;
+
 
 /**
  * TextRank 自动摘要
@@ -152,9 +156,10 @@ public class TextRankSummary
                 "二，有限的非确定算法，这类算法在有限的时间内终止。然而，对于一个（或一些）给定的数值，算法的结果并不是唯一的或确定的。\n" +
                 "三，无限的算法，是那些由于没有定义终止定义条件，或定义的条件无法由输入的数据满足而不终止运行的算法。通常，无限算法的产生是由于未能确定的定义终止条件。";
         //System.out.println(TextRankSummary.getTopSentenceList(document, 3));
-        String fileName = "src/test/doc/01.txt";
+        String fileName = "src/test/doc/06.txt";
         String rf = ReadFromFile.file2String(fileName,"utf8");
-        System.out.println(TextRankSummary.getTopSentenceList(document2, 3));
+        //System.out.println(TextRankSummary.getTopSentenceList(rf, 3));
+        System.out.println(TextRankSummary.getTopSentenceListEn(rf, 3));
     }
 
     /**
@@ -200,6 +205,74 @@ public class TextRankSummary
     public static List<String> getTopSentenceList(String document, int size)
     {
         List<String> sentenceList = spiltSentence(document);
+        List<List<String>> docs = new ArrayList<List<String>>();
+        for (String sentence : sentenceList)
+        {
+            List<Term> termList = HanLP.segment(sentence);
+            List<String> wordList = new LinkedList<String>();
+            for (Term term : termList)
+            {
+                if (shouldInclude(term))
+                {
+                    wordList.add(term.word);
+                }
+            }
+            docs.add(wordList);
+        }
+        TextRankSummary textRankSummary = new TextRankSummary(docs);
+        int[] topSentence = textRankSummary.getTopSentence(size);
+        List<String> resultList = new LinkedList<String>();
+        for (int i : topSentence)
+        {
+            resultList.add(sentenceList.get(i));
+        }
+        return resultList;
+    }
+
+    /**
+     * 将英文文章分割为句子
+     * @param document
+     * @return
+     */
+    static List<String> spiltSentenceEn(String document)
+    {
+        List<String> sentences = new ArrayList<>();
+        try{
+            InputStream is = TextRankSummary.class.getClassLoader().getResourceAsStream("static/nlpbin/en-sent.bin");
+            //InputStream is = new FileInputStream("nlpbin/en-sent.bin");
+            SentenceModel model = new SentenceModel(is);
+            SentenceDetectorME sdetector = new SentenceDetectorME(model);
+            String[] sentencesEN = sdetector.sentDetect(document);
+            //sentences.addAll(Arrays.asList(sentencesEN));
+            Arrays.stream(sentencesEN)
+                .filter(str -> str.trim().length()!=0 ? true : false)
+                .forEach(str->{
+                    if(".".equals(str.substring(str.length()-1))){
+                        str = str.substring(0,str.length()-1);
+                    }
+                    if(str.contains("\r\n")){
+                        sentences.addAll(Arrays.asList(Arrays.stream(str.split("[,\r\n]")).filter(str2 -> str2.trim().length()!=0 ? true : false).toArray(String[]::new)));
+                    }else {
+                        sentences.addAll(Arrays.asList(Arrays.stream(str.split("[,]")).toArray(String[]::new)));
+                    }
+                });
+            return sentences;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return sentences;
+    }
+
+    /**
+     * 一句话调用英文接口
+     * @param document 目标英文文档
+     * @param size 需要的关键句的个数
+     * @return 关键句列表
+     */
+    public static List<String> getTopSentenceListEn(String document, int size)
+    {
+        List<String> sentenceList = spiltSentenceEn(document);
         List<List<String>> docs = new ArrayList<List<String>>();
         for (String sentence : sentenceList)
         {
