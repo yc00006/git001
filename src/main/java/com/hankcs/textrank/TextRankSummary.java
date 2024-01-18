@@ -107,6 +107,8 @@ public class TextRankSummary
         {
             top.put(vertex[i], i);
         }
+
+        System.out.println(top);
     }
 
     /**
@@ -207,6 +209,11 @@ public class TextRankSummary
     public static List<String> getTopSentenceList(String document, int size)
     {
         List<String> sentenceList = spiltSentence(document);
+
+        for(int i=0;i<sentenceList.size();i++){
+            System.out.println("L"+i+": "+sentenceList.get(i));
+        }
+        System.out.println("-------------------------------------");
         List<List<String>> docs = new ArrayList<List<String>>();
         for (String sentence : sentenceList)
         {

@@ -101,26 +101,41 @@ public class BM25
     public double sim(List<String> sentence, int index)
     {
         double score = 0;
+        double score2 = 0;
         for (String word : sentence)
         {
             if (!f[index].containsKey(word)) continue;
+
+            System.out.print("L"+index+"-"+word+": ");
             int d = docs.get(index).size();
             Integer wf = f[index].get(word);
+
+            score2 = score;
             score += (idf.get(word) * wf * (k1 + 1)
                     / (wf + k1 * (1 - b + b * d
                                                 / avgdl)));
+
+            score2 = score - score2;
+            System.out.print(score2+"; ");
         }
+
+        System.out.print(" || ");
 
         return score;
     }
 
     public double[] simAll(List<String> sentence)
     {
+        System.out.println(sentence);
+
         double[] scores = new double[D];
         for (int i = 0; i < D; ++i)
         {
             scores[i] = sim(sentence, i);
         }
+
+        System.out.println("");
+        System.out.println("-------------------------------------");
         return scores;
     }
 }
