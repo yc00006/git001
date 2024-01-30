@@ -61,6 +61,5 @@ public class TextRankSummaryMuty {
         System.out.println(new TextRankKeyword().getKeyword("", doc));
         long time = System.currentTimeMillis() - begin;
         System.out.println("time = " + time);
-        System.out.println(123);
     }
 }
